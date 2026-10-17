@@ -4,7 +4,7 @@ set -euo pipefail
 job_dir=$1
 scripts_dir=$2
 pacman -Syu --noconfirm --needed \
-  rust nodejs npm git pkgconf python desktop-file-utils \
+  rust nodejs npm git pkgconf python desktop-file-utils polkit \
   alsa-lib at-spi2-core cairo cups dbus expat glib2 gtk3 \
   libdrm libnotify libsecret libx11 libxcb libxcomposite \
   libxdamage libxext libxfixes libxkbcommon libxrandr \
