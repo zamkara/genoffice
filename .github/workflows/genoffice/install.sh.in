@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repository='zamkara/genoffice'
+release='@RELEASE_TAG@'
+package='genoffice-@PKGVER@-@PKGREL@-x86_64.pkg.tar.zst'
+if [[ "$(uname -s)" != Linux || ! -f /etc/arch-release ]]; then
+  echo 'GenOffice requires Arch Linux or an Arch derivative such as Omarchy.' >&2
+  exit 1
+fi
+if [[ "$(uname -m)" != x86_64 ]]; then
+  echo 'Only x86_64 packages are currently available.' >&2
+  exit 1
+fi
+for tool in pacman curl sha256sum vercmp mktemp awk; do
+  command -v "$tool" >/dev/null || { echo "Required command not found: $tool" >&2; exit 1; }
+done
+available='@PKGVER@-@PKGREL@'
+installed=$(pacman -Q genoffice 2>/dev/null | awk '{print $2}' || true)
+if [[ -n "$installed" && $(vercmp "$installed" "$available") -ge 0 ]]; then
+  echo "genoffice $installed is already current."
+  exit 0
+fi
+workspace=$(mktemp -d -t genoffice-install.XXXXXXXX)
+trap 'rm -rf "$workspace"' EXIT
+base="https://github.com/$repository/releases/download/$release"
+curl --fail --silent --show-error --location --retry 3 --connect-timeout 10 --max-time 300 \
+  --proto '=https' --proto-redir '=https' "$base/$package" -o "$workspace/$package"
+curl --fail --silent --show-error --location --retry 3 --connect-timeout 10 --max-time 30 \
+  --proto '=https' --proto-redir '=https' "$base/SHA256SUMS" -o "$workspace/SHA256SUMS"
+checksum_count=$(awk -v pkg="$package" '$2 == pkg {n++} END {print n+0}' "$workspace/SHA256SUMS")
+[[ "$checksum_count" == 1 ]] || { echo 'Missing or ambiguous package checksum.' >&2; exit 1; }
+(cd "$workspace" && awk -v pkg="$package" '$2 == pkg' SHA256SUMS | sha256sum --check --strict)
+if [[ $EUID == 0 ]]; then
+  pacman -U -- "$workspace/$package" </dev/tty
+else
+  sudo pacman -U -- "$workspace/$package" </dev/tty
+fi
+echo "genoffice $available installed."
