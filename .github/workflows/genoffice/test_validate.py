@@ -16,6 +16,7 @@ class ValidateTests(unittest.TestCase):
                 '.BUILDINFO',
                 'opt/GenOffice/genoffice',
                 'opt/GenOffice/resources/app.asar',
+                'opt/GenOffice/resources/arch-release.json',
                 'opt/GenOffice/resources/cli/genoffice',
                 'opt/GenOffice/resources/cli/genoffice.cjs',
                 'opt/GenOffice/resources/native/xlsx-sidecar',

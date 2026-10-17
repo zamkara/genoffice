@@ -50,7 +50,7 @@ def previous(repo):
 
 def recipe_hash():
     h=hashlib.sha256()
-    for name in ('PKGBUILD.in','install.sh.in','build.sh','validate.py'):
+    for name in ('PKGBUILD.in','install.sh.in','build.sh','validate.py','patch_updater.py'):
         h.update(name.encode());h.update((HERE/name).read_bytes())
     return h.hexdigest()
 
@@ -141,6 +141,7 @@ def main():
         'SHA':sha,
         'UPSTREAM_VERSION':shlex.quote(version),
         'BUILD_DATE':state['commit_date'][:10],
+        'REPOSITORY':shlex.quote(args.repository),
         'SOURCES':shlex.quote(source),
         'CHECKSUMS':shlex.quote(checksum),
         'RELEASE_TAG':tag,
@@ -151,6 +152,7 @@ def main():
         recipe=recipe.replace('@'+key+'@',value)
         installer=installer.replace('@'+key+'@',value)
     (directory/'PKGBUILD').write_text(recipe)
+    (directory/'patch_updater.py').write_bytes((HERE/'patch_updater.py').read_bytes())
     install_path=directory/'install.sh'
     install_path.write_text(installer)
     install_path.chmod(0o755)

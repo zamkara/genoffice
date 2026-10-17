@@ -32,7 +32,7 @@ jobs:
           bash -n .github/workflows/genoffice/build.sh
           bash -n .github/workflows/genoffice/PKGBUILD.in
           bash -n .github/workflows/genoffice/install.sh.in
-          python3 -m py_compile .github/workflows/genoffice/prepare.py .github/workflows/genoffice/publish.py .github/workflows/genoffice/validate.py
+          python3 -m py_compile .github/workflows/genoffice/prepare.py .github/workflows/genoffice/publish.py .github/workflows/genoffice/validate.py .github/workflows/genoffice/patch_updater.py
           python3 - <<'PYROOT'
           import subprocess
           entries = set(subprocess.check_output(['git', 'ls-tree', '--name-only', 'HEAD'], text=True).splitlines())

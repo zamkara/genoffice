@@ -6,9 +6,9 @@ pkgdesc=@DESCRIPTION@
 arch=('x86_64')
 url=@URL@
 license=('Apache-2.0')
-depends=('glibc' 'gcc-libs' 'alsa-lib' 'at-spi2-core' 'cairo' 'cups' 'dbus'
-         'expat' 'glib2' 'gtk3' 'libdrm' 'libnotify' 'libsecret' 'libx11'
-         'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes'
+depends=('glibc' 'gcc-libs' 'pacman' 'polkit' 'alsa-lib' 'at-spi2-core' 'cairo'
+         'cups' 'dbus' 'expat' 'glib2' 'gtk3' 'libdrm' 'libnotify' 'libsecret'
+         'libx11' 'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes'
          'libxkbcommon' 'libxrandr' 'mesa' 'nspr' 'nss' 'pango'
          'systemd-libs' 'xdg-utils')
 makedepends=('rust' 'nodejs' 'npm' 'git' 'pkgconf' 'python' 'desktop-file-utils')
@@ -19,6 +19,7 @@ options=('!lto' '!debug' '!strip')
 _commit=@SHA@
 _upstream_version=@UPSTREAM_VERSION@
 _build_date=@BUILD_DATE@
+_arch_repo=@REPOSITORY@
 source=(@SOURCES@)
 sha256sums=(@CHECKSUMS@)
 
@@ -34,6 +35,11 @@ _build_env() {
   export ELECTRON_CACHE="$startdir/.cache/electron"
   export ELECTRON_BUILDER_CACHE="$startdir/.cache/electron-builder"
   export GENOFFICE_APP_VERSION="$_upstream_version"
+}
+
+prepare() {
+  cd "$srcdir/genoffice-$_commit"
+  python "$startdir/patch_updater.py" apps/shell/src/main/updater.ts "$_arch_repo"
 }
 
 build() {
@@ -74,6 +80,10 @@ package() {
   if [[ -f "$pkgdir/opt/GenOffice/chrome-sandbox" ]]; then
     chmod 4755 "$pkgdir/opt/GenOffice/chrome-sandbox"
   fi
+  printf '{"repository":"%s","pkgver":"%s","pkgrel":%s,"version":"%s-%s","commit":"%s"}\n' \
+    "$_arch_repo" "$pkgver" "$pkgrel" "$pkgver" "$pkgrel" "$_commit" \
+    > "$pkgdir/opt/GenOffice/resources/arch-release.json"
+  chmod 644 "$pkgdir/opt/GenOffice/resources/arch-release.json"
 
   install -d "$pkgdir/usr/bin"
   ln -s /opt/GenOffice/resources/cli/genoffice "$pkgdir/usr/bin/genoffice"
